@@ -42,26 +42,36 @@ screen stays blank, swap the driver flag in `platformio.ini`:
 
 ## Build & flash
 
-Requires [PlatformIO](https://platformio.org/) (`pip install platformio`).
+Credentials and location are compiled in **at flash time** from environment
+variables — nothing secret is committed.
 
-Credentials and location come from **environment variables** at flash time —
-nothing secret is committed. Copy the example and fill it in:
+### 1. Prerequisites
+
+- **Python 3** and **PlatformIO Core**: `pip install platformio` (gives you the
+  `pio` command). Or use the PlatformIO IDE extension for VS Code.
+- A **USB data cable** (charge-only cables won't enumerate a serial port).
+
+### 2. Install the USB-serial driver
+
+The ESP32-2432S028R talks to your computer over a **CH340** USB-serial chip:
+
+- **Linux** — built into the kernel, nothing to install.
+- **macOS / older Windows** — install the [WCH CH340 driver](https://www.wch-ic.com/downloads/CH341SER_ZIP.html).
+
+The board has **both a micro-USB and a USB-C** port. Use whichever is wired to
+the CH340 — on most units either works; if the port isn't detected, try the
+other connector.
+
+### 3. Set your WiFi + location
+
+Copy the example, fill it in, and source it:
 
 ```bash
 cp secrets.ini.example secrets.sh   # then edit secrets.sh
 source secrets.sh
-pio run -t upload
 ```
 
-Or pass them inline:
-
-```bash
-WIFI_SSID="MyNetwork" WIFI_PASS="hunter2" \
-LATITUDE=52.0907 LONGITUDE=5.1214 LOCATION_NAME="Utrecht" \
-pio run -t upload
-```
-
-Variables:
+Or pass the variables inline on the flash command (see step 4). Variables:
 
 | Variable        | Meaning                                   |
 | --------------- | ----------------------------------------- |
@@ -74,7 +84,56 @@ Variables:
 The project still **compiles** with these unset (falls back to empty WiFi +
 Amsterdam coordinates), but it won't connect until real credentials are flashed.
 
-Serial monitor: `pio device monitor` (115200 baud).
+### 4. Flash the firmware
+
+Plug the board in, then build + upload:
+
+```bash
+# after `source secrets.sh`
+pio run -e cyd -t upload
+```
+
+…or all in one line without a secrets file:
+
+```bash
+WIFI_SSID="MyNetwork" WIFI_PASS="hunter2" \
+LATITUDE=52.0907 LONGITUDE=5.1214 LOCATION_NAME="Utrecht" \
+pio run -e cyd -t upload
+```
+
+PlatformIO auto-detects the serial port. If you have several serial devices
+connected, name it explicitly:
+
+```bash
+pio run -e cyd -t upload --upload-port /dev/ttyUSB0     # Linux
+pio run -e cyd -t upload --upload-port COM5             # Windows
+pio run -e cyd -t upload --upload-port /dev/cu.usbserial-1420  # macOS
+```
+
+The ESP32 is normally reset into its bootloader automatically (via DTR/RTS). If
+you see `Failed to connect`, do the manual dance: **hold BOOT**, tap **RST** (or
+start the upload), then **release BOOT** once `Connecting…` appears.
+
+### 5. Verify
+
+```bash
+pio device monitor -b 115200
+```
+
+You should see the boot screen → "Connecting to WiFi" → live weather within a
+few seconds, and the display then redraws every 5 minutes.
+
+### Troubleshooting
+
+- **Port not found / not listed** — wrong cable (must be data), missing CH340
+  driver (step 2), or try the other USB connector.
+- **Permission denied on Linux** — add yourself to the serial group:
+  `sudo usermod -aG dialout $USER`, then log out/in (or run the command with
+  `sudo` once).
+- **`Failed to connect to ESP32`** — use the BOOT/RST fallback in step 4.
+- **Blank screen or wrong colours** — your unit may use a different panel; swap
+  the driver flag in `platformio.ini` (`-DILI9341_2_DRIVER=1` →
+  `-DILI9341_DRIVER=1` or `-DST7789_DRIVER=1`) and re-flash.
 
 ## Project layout
 
