@@ -32,6 +32,9 @@ enum class Condition : uint8_t {
 
 Condition conditionFromDescription(const String& description);
 
+// English display label for a condition (e.g. Clear -> "Clear").
+const char* conditionLabel(Condition c);
+
 // One 5-minute nowcast slot.
 struct RainSlot {
   uint8_t value = 0;      // raw 0..255 from Buienradar
@@ -65,7 +68,7 @@ struct CurrentWeather {
 // One day of the multi-day forecast.
 struct DayForecast {
   bool valid = false;
-  char weekday[3] = "--";  // Dutch abbrev: Ma/Di/Wo/Do/Vr/Za/Zo
+  char weekday[4] = "--";  // English abbrev: Mon/Tue/Wed/Thu/Fri/Sat/Sun
   float minTemp = 0.0f;
   float maxTemp = 0.0f;
   int rainChance = 0;      // %

@@ -20,8 +20,8 @@ bool has(const String& haystack, const char* needle) {
   return haystack.indexOf(needle) >= 0;
 }
 
-// Dutch weekday abbreviation from a "YYYY-MM-DDT..." date string via Zeller.
-void weekdayFromDate(const String& date, char out[3]) {
+// English weekday abbreviation from a "YYYY-MM-DDT..." date string via Zeller.
+void weekdayFromDate(const String& date, char out[4]) {
   strcpy(out, "--");
   if (date.length() < 10) return;
   int y = date.substring(0, 4).toInt();
@@ -36,9 +36,9 @@ void weekdayFromDate(const String& date, char out[3]) {
   int J = y / 100;
   int h = (d + (13 * (m + 1)) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;
   // h: 0=Sat,1=Sun,2=Mon,...6=Fri
-  static const char* names[7] = {"Za", "Zo", "Ma", "Di", "Wo", "Do", "Vr"};
-  strncpy(out, names[h], 2);
-  out[2] = '\0';
+  static const char* names[7] = {"Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"};
+  strncpy(out, names[h], 3);
+  out[3] = '\0';
 }
 
 }  // namespace
@@ -61,6 +61,21 @@ Condition conditionFromDescription(const String& raw) {
   if (has(d, "zonnig") || has(d, "onbewolkt") || has(d, "helder"))
     return Condition::Clear;
   return Condition::Unknown;
+}
+
+const char* conditionLabel(Condition c) {
+  switch (c) {
+    case Condition::Clear:     return "Clear";
+    case Condition::Partly:    return "Partly cloudy";
+    case Condition::Cloudy:    return "Cloudy";
+    case Condition::Fog:       return "Fog";
+    case Condition::Rain:      return "Rain";
+    case Condition::HeavyRain: return "Heavy rain";
+    case Condition::Snow:      return "Snow";
+    case Condition::Thunder:   return "Thunderstorm";
+    case Condition::Unknown:
+    default:                   return "--";
+  }
 }
 
 float rainValueToMmPerHour(int value) {
