@@ -1,0 +1,12 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/
+
+# Local secrets (WiFi + location); copy secrets.ini.example -> secrets.sh
+secrets.sh
+secrets.ini
+
+# OS junk
+.DS_Store
